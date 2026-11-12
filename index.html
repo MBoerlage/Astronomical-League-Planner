@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AL Observing Program Planner</title>
+<meta name="description" content="Plan visual observing for Astronomical League observing programs: what is up tonight, what to hop to next, and progress toward each certificate.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bd:#30363d;--tx:#e6edf3;--mu:#8b949e;--dm:#586069;--ac:#58a6ff;--gr:#3fb950;--or:#ffa657;--rd:#f85149;--ye:#e3b341}
+body.red{--bg:#000;--bg2:#0a0000;--bg3:#170000;--bd:#3a0000;--tx:#ff4a3d;--mu:#b02a22;--dm:#701812;--ac:#ff6a5e;--gr:#ff4a3d;--or:#e03a30;--rd:#ff7a70;--ye:#ff4a3d}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tx);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh}
+header{display:flex;align-items:center;gap:10px;padding:0 12px;height:44px;background:var(--bg2);border-bottom:1px solid var(--bd);flex-shrink:0;white-space:nowrap;overflow-x:auto}
+.brand{font-weight:600;font-size:14px;margin-right:6px}
+button,select,input{font:inherit;color:var(--tx)}
+button{background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:3px 10px;cursor:pointer}
+button:hover{border-color:var(--ac)}
+button.pri{background:var(--ac);border-color:var(--ac);color:#000;font-weight:600}
+button.ghost{background:none}
+button.on{border-color:var(--ac);color:var(--ac)}
+button:disabled{opacity:.4;cursor:default}
+input,select{background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:2px 6px;min-width:0}
+input:focus,select:focus{outline:none;border-color:var(--ac)}
+input[type=number]{width:66px}
+input[type=checkbox]{accent-color:var(--ac)}
+a{color:var(--ac)}
+#night-info{margin-left:auto;color:var(--mu);font-size:12px}
+#file-info{color:var(--mu);font-size:12px;border-left:1px solid var(--bd);padding-left:10px}
+#file-info.warn{color:var(--or)}
+.lvl{display:inline-flex;align-items:center;gap:6px;margin-right:12px;font-size:12px;color:var(--mu)}
+.lvl.ok{color:var(--gr)}
+.lvl .bar{min-width:54px;width:54px}
+main{display:flex;flex:1;min-height:0}
+#side{width:278px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--bd);overflow-y:auto;padding:10px 12px 20px}
+.sec{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px;border-top:1px solid var(--bd);padding-top:10px;display:flex;justify-content:space-between;align-items:center}
+.sec:first-child{margin-top:0;border:none;padding-top:0}
+.sec button{font-size:10px;padding:0 6px;text-transform:none;letter-spacing:0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;color:var(--mu);font-size:12px}
+.row>span:first-child{flex-shrink:0}
+.row input[type=text],.row select{flex:1;width:0}
+.chk{display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:12px;cursor:pointer}
+.chk .cnt{margin-left:auto;color:var(--mu);font-size:11px;font-variant-numeric:tabular-nums}
+.chk.off{color:var(--dm)}
+.note{font-size:11px;color:var(--mu);line-height:1.4;margin:4px 0 2px}
+.note b{color:var(--tx);font-weight:600}
+#center{flex:1;display:flex;flex-direction:column;min-width:0}
+#tabs{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--bd);background:var(--bg2);flex-shrink:0;overflow-x:auto;white-space:nowrap}
+.tab{background:none;border:1px solid transparent;color:var(--mu)}
+.tab.on{border-color:var(--bd);background:var(--bg3);color:var(--tx)}
+#tabs .sp{flex:1}
+#bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--bd);flex-shrink:0;font-size:12px;color:var(--mu)}
+#bar input[type=text]{width:190px}
+#bar:empty{display:none}
+#q{width:170px}
+#status{font-size:12px;color:var(--mu);padding:5px 12px;border-bottom:1px solid var(--bd);flex-shrink:0;min-height:27px}
+#tw{flex:1;overflow:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{position:sticky;top:0;background:var(--bg2);text-align:left;font-weight:600;font-size:11px;color:var(--mu);padding:5px 8px;border-bottom:1px solid var(--bd);white-space:nowrap;cursor:pointer;user-select:none}
+th.ns{cursor:default}
+td{padding:4px 8px;border-bottom:1px solid var(--bg3);white-space:nowrap}
+tr.r{cursor:pointer}
+tr.r:hover td{background:var(--bg2)}
+tr.sel td{background:var(--bg3)}
+tr.grp td{background:var(--bg2);color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px}
+tr.done td{color:var(--dm)}
+.num{text-align:right}
+.r-Easy{color:var(--gr)}.r-OK{color:var(--tx)}.r-Hard{color:var(--or)}.r-No{color:var(--rd)}
+.warn{color:var(--or)}
+.badge{display:inline-block;border:1px solid var(--bd);border-radius:10px;padding:0 6px;font-size:11px;color:var(--mu);margin-right:3px}
+.badge.c{border-color:var(--ac);color:var(--ac);font-weight:600}
+.x{background:none;border:none;color:var(--mu);padding:0 4px}
+#detail{width:330px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--bd);overflow-y:auto;padding:12px}
+#detail h2{font-size:15px;margin-bottom:2px}
+#detail .sub{color:var(--mu);font-size:12px;margin-bottom:10px}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:3px 8px;font-size:12px;margin-bottom:10px}
+.kv span:nth-child(odd){color:var(--mu)}
+.cred{border:1px solid var(--bd);border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:12px}
+.cred.no{opacity:.55}
+.cred .t{display:flex;justify-content:space-between;gap:6px}
+.cred .s{color:var(--mu);font-size:11px}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+canvas{width:100%;display:block;margin-bottom:10px;border:1px solid var(--bd);border-radius:6px}
+.bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;min-width:120px}
+.bar i{display:block;height:100%;background:var(--gr)}
+dialog{background:var(--bg2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:18px;max-width:560px;margin:auto}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h3{margin-bottom:8px}
+dialog p,dialog li{font-size:12px;color:var(--mu);margin-bottom:8px;line-height:1.5}
+dialog ul{padding-left:18px}
+.i{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border:1px solid var(--dm);border-radius:50%;font:italic 600 10px/1 Georgia,serif;color:var(--mu);cursor:help;margin-left:5px;flex-shrink:0;text-transform:none;letter-spacing:0;user-select:none;vertical-align:middle}
+.i:hover,.i:focus{border-color:var(--ac);color:var(--ac);outline:none}
+#tip{position:fixed;z-index:50;max-width:300px;background:var(--bg3);color:var(--tx);border:1px solid var(--ac);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.45;box-shadow:0 6px 18px rgba(0,0,0,.5);display:none;white-space:normal;pointer-events:none}
+.mob{display:none}
+@media (max-width:900px){
+  body{overflow:auto;font-size:14px}
+  #app{height:auto;min-height:100vh}
+  main{flex-direction:column}
+  #side,#detail{width:auto;border:none;border-bottom:1px solid var(--bd)}
+  #side{display:none}
+  body.showside #side{display:block}
+  #detail{order:-1}
+  #tw{overflow-x:auto}
+  .mob{display:inline-block}
+  button{padding:6px 12px}
+  td{padding:8px 8px}
+}
+@media print{
+  body{background:#fff;color:#000;overflow:visible}
+  header,#side,#detail,#tabs,#bar,#tip,.i{display:none}
+  #app{height:auto}
+  th,td{color:#000;border-color:#999}
+  th{position:static;background:#fff}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <span class="brand">AL Observing Program Planner</span>
+  <button class="mob" id="b-side">Settings</button>
+  <input type="date" id="date" title="Evening of"><span class="i" tabindex="0" data-tip="The evening you are planning. The night runs from this evening into the next morning. The page opens on tonight.">i</span>
+  <button id="b-red" title="Red night mode">Night mode</button>
+  <button id="b-about" class="ghost">About</button>
+  <span id="night-info"></span>
+  <span id="file-info" title="Where your observed marks are kept"></span><span class="i" tabindex="0" data-tip="Your observed marks live in this browser. To keep them safe and move them between computers, link a file on the Progress tab. Nothing is ever uploaded.">i</span>
+</header>
+<main>
+<aside id="side">
+  <div class="sec">Site <button id="b-geo" title="Use this device's location">Use my location</button></div>
+  <div class="row"><span>Latitude</span><input type="number" id="lat" step="0.01" min="-90" max="90"></div>
+  <div class="row"><span>Longitude (east +)<span class="i" tabindex="0" data-tip="East is positive, so sites in the Americas have a negative longitude. Houston is about -95.4. Two decimals are plenty.">i</span></span><input type="number" id="lon" step="0.01" min="-180" max="180"></div>
+  <div class="row"><span>Minimum altitude<span class="i" tabindex="0" data-tip="Targets lower than this many degrees above the horizon are treated as not observable. Raise it for trees, buildings or murky air near the horizon.">i</span></span><input type="number" id="minAlt" min="0" max="60" step="1"></div>
+  <div class="note">Times use this computer's time zone.</div>
+
+  <div class="sec">Observing window</div>
+  <div class="row"><span>Start<span class="i" tabindex="0" data-tip="When you begin observing. Nautical dusk suits bright targets; astronomical dusk is full darkness for faint galaxies and nebulae. Type a time to fix it yourself.">i</span></span><select id="startMode"><option value="sunset">Sunset</option><option value="civil">Civil dusk</option><option value="naut">Nautical dusk</option><option value="astro">Astronomical dusk</option><option value="custom">Fixed time</option></select><input type="text" id="startTime" style="max-width:58px" placeholder="20:00"></div>
+  <div class="row"><span>End</span><input type="text" id="endTime" style="width:58px;flex:none" placeholder="00:00"></div>
+  <div class="row"><span>Minutes per target<span class="i" tabindex="0" data-tip="How long you spend finding, observing and logging one target. It sets how many targets a suggested night holds and the times in My plan.">i</span></span><input type="number" id="perTarget" min="1" max="60"></div>
+
+  <div class="sec">Equipment tonight</div>
+  <div class="row"><span>Instrument<span class="i" tabindex="0" data-tip="What you observe with tonight. Each program accepts only certain instruments: binocular programs need binoculars, and a few can be done with the naked eye.">i</span></span><select id="inst"><option value="eye">Naked eye</option><option value="bino50">Binoculars to 50 mm</option><option value="bino80">Binoculars 70-80 mm</option><option value="scope">Telescope</option></select></div>
+  <div class="row" id="row-ap"><span>Aperture (mm)</span><input type="number" id="aperture" min="40" max="1000" step="5"></div>
+  <div class="row"><span>Naked-eye limit (mag)<span class="i" tabindex="0" data-tip="The faintest star you can see overhead without optics. About 4 in a city, 5 to 5.5 in suburbs, 6.5 or better at a dark site. It drives the difficulty ratings.">i</span></span><input type="number" id="nelm" min="2" max="7.5" step="0.1"></div>
+  <div class="row"><span>Finding targets<span class="i" tabindex="0" data-tip="Several programs, including Messier and Caldwell, only give credit when you find each target by hand with charts. With go-to or push-to selected, those programs stop counting.">i</span></span><select id="find"><option value="manual">By hand</option><option value="goto">Go-to / push-to</option></select></div>
+  <label class="chk"><input type="checkbox" id="imaging"> I am imaging tonight, not observing by eye<span class="i" tabindex="0" data-tip="Tick this for a camera session. Only programs that accept images then count, including the Messier, Caldwell and Bennett imaging programs.">i</span></label>
+  <div class="note" id="eq-note"></div>
+
+  <div class="sec"><span>Show<span class="i" tabindex="0" data-tip="Beyond my limit: targets rated too faint for tonight. Unknown magnitude: targets with no brightness on record, which may be easy or impossible.">i</span></span></div>
+  <label class="chk"><input type="checkbox" id="hideDone"> Hide targets I have observed</label>
+  <label class="chk"><input type="checkbox" id="showHard"> Include targets beyond my limit</label>
+  <label class="chk"><input type="checkbox" id="showNoMag"> Include targets with unknown magnitude</label>
+
+  <div class="sec"><span>My programs<span class="i" tabindex="0" data-tip="Tick the programs you are working on. Only ticked programs count as credit. The number is items observed out of items listed. A greyed program earns nothing with the setup chosen for tonight; hover it for the reason.">i</span></span> <span><button id="b-all">All</button> <button id="b-none">None</button></span></div>
+  <div id="progs"></div>
+  <div class="note">The count is observed / listed items. A program is greyed out when tonight's instrument, finding method or imaging choice earns no credit in it (hover for the reason).</div>
+</aside>
+
+<section id="center">
+  <div id="tabs">
+    <button class="tab on" data-tab="next">What's next</button>
+    <button class="tab" data-tab="tonight">Tonight</button>
+    <button class="tab" data-tab="plan">My plan</button>
+    <button class="tab" data-tab="progress">Progress</button>
+    <input type="search" id="q" placeholder="Search this list"><span class="i" tabindex="0" data-tip="Filters whichever list is showing. Type a designation such as M31 or NGC 70, or words such as globular, Cyg or Herschel. The search stays when you switch tabs.">i</span>
+    <span class="sp"></span>
+    <button id="b-suggest" title="Fill the plan with the best targets for tonight">Suggest a night</button><span class="i" tabindex="0" data-tip="Replaces My plan with the best-scoring targets that fit your observing window, at most six per constellation, ordered west to east.">i</span>
+    <select id="b-exp" title="Export the list shown below"><option value="">Export…</option><option value="csv">CSV (spreadsheet)</option><option value="skylist">SkySafari observing list</option><option value="stellarium">Stellarium observing list</option></select><span class="i" tabindex="0" data-tip="Exports the list shown below. CSV opens in Excel. SkySafari lists also load into a PiFinder. Chart apps only show targets they know by catalogue name.">i</span>
+    <button id="b-print" class="ghost">Print</button>
+  </div>
+  <div id="bar"></div>
+  <div id="status"></div>
+  <div id="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div>
+</section>
+
+<aside id="detail"><div class="note">Select a target to see which programs it counts toward.</div></aside>
+</main>
+</div>
+
+<div id="tip" role="tooltip"></div>
+<dialog id="about">
+  <h3>About this planner</h3>
+  <p>This page helps Astronomical League members plan visual observing for the League's observing programs. Pick your site, tonight's instrument and the programs you are working on. <b>What's next</b> ranks nearby targets from wherever you are pointing now; <b>Tonight</b> lists everything observable; <b>My plan</b> orders a list from west to east.</p>
+  <p><b>Credit.</b> The target lists are the work of the <a href="https://www.astroleague.org/" target="_blank" rel="noopener">Astronomical League</a> and its observing program coordinators. This is an independent planning aid, not an official League tool. Always read the program's own page for its rules, required log details and how to submit: each program name in the target panel links there.</p>
+  <p><b>Data.</b> Positions and some magnitudes for NGC, IC and Messier objects come from <a href="https://github.com/mattiaverga/OpenNGC" target="_blank" rel="noopener">OpenNGC</a> (CC-BY-SA 4.0). Magnitudes marked SIMBAD come from the SIMBAD database, operated at CDS, Strasbourg, France; most of those are blue (B) magnitudes, which read fainter than visual.</p>
+  <p><b>Rules of thumb used.</b></p>
+  <ul>
+    <li>Limiting magnitude = naked-eye limit - 4 + 5 log10(aperture in mm). Stars are rated Easy with 3 magnitudes to spare, OK with 1, Hard at the limit. Galaxies and nebulae are treated as 1.5 magnitudes harder than their listed magnitude, clusters and planetaries 0.5.</li>
+    <li>"Leaving soon" means the target will drop below your minimum altitude at the start of your observing window within about three weeks.</li>
+    <li>Credits count only programs you ticked, that tonight's setup qualifies for, and that you have not yet marked observed. What qualifies (eyes, binoculars or telescope; by hand or go-to; visual or imaging) is taken from each program's "Quick View of Requirements" grid on its AL page.</li>
+  </ul>
+  <p>Your site, equipment and plan are stored in this browser. Observed marks are stored in this browser too; on the Progress tab you can keep them in a file on your own computer (saved automatically in Chrome and Edge), or download a copy.</p>
+  <p id="about-meta"></p>
+  <button id="b-close" class="pri">Close</button>
+</dialog>
+
+<script src="al_data.js"></script>
+<script>
+'use strict';
+/* ====================================================================== core (no DOM) */
+const D2R = Math.PI / 180, SID = 1.00273791;
+const STAR_TYPES = {Dbl:1, Mult:1, Carbon:1, Star:1, QSO:1};
+const TYPE_NAME = {Gal:'Galaxy', OC:'Open cluster', GC:'Globular cluster', PN:'Planetary nebula', Neb:'Bright nebula', DN:'Dark nebula',
+  Dbl:'Double star', Mult:'Multiple star', Carbon:'Carbon star', Star:'Star', QSO:'Quasar / AGN', Ast:'Asterism', Con:'Constellation', Pair:'Two in one view'};
+const INST = {eye:{label:'naked eye', ap:7}, bino50:{label:'binoculars to 50 mm', ap:50}, bino80:{label:'binoculars 70-80 mm', ap:80}, scope:{label:'telescope', ap:0}};
+const DEFAULTS = {
+  date:'', loc:{lat:39.8, lon:-98.6}, minAlt:20, startMode:'naut', startTime:'', endTime:'00:00', perTarget:6,
+  inst:'scope', aperture:200, nelm:5.5, imaging:false, find:'manual', hideDone:true, showHard:false, showNoMag:true,
+  progs:null, done:{}, plan:[], red:false, tab:'next', anchor:'', radius:25, at:'now', atTime:''
+};
+/* Bright stars to hop from (RA hours, Dec degrees, J2000, rounded). */
+const ANCHORS = [['Sirius',6.752,-16.72],['Canopus',6.399,-52.70],['Arcturus',14.261,19.18],['Vega',18.616,38.78],['Capella',5.278,46.00],['Rigel',5.242,-8.20],
+['Procyon',7.655,5.22],['Betelgeuse',5.919,7.41],['Achernar',1.629,-57.24],['Altair',19.846,8.87],['Aldebaran',4.599,16.51],['Antares',16.490,-26.43],
+['Spica',13.420,-11.16],['Pollux',7.755,28.03],['Fomalhaut',22.961,-29.62],['Deneb',20.690,45.28],['Regulus',10.140,11.97],['Castor',7.577,31.89],
+['Bellatrix',5.419,6.35],['Elnath',5.438,28.61],['Alnilam',5.604,-1.20],['Alnitak',5.679,-1.94],['Mintaka',5.533,-0.30],['Saiph',5.796,-9.67],
+['Alioth',12.900,55.96],['Dubhe',11.062,61.75],['Merak',11.031,56.38],['Phecda',11.897,53.69],['Mizar',13.399,54.93],['Alkaid',13.792,49.31],
+['Mirfak',3.405,49.86],['Polaris',2.530,89.26],['Kochab',14.845,74.16],['Alphard',9.460,-8.66],['Hamal',2.120,23.46],['Denebola',11.818,14.57],
+['Algieba',10.333,19.84],['Algol',3.136,40.96],['Alpheratz',0.140,29.09],['Mirach',1.163,35.62],['Almach',2.065,42.33],['Schedar',0.675,56.54],
+['Caph',0.153,59.15],['Rasalhague',17.582,12.56],['Enif',21.736,9.88],['Scheat',23.063,28.08],['Markab',23.079,15.21],['Albireo',19.512,27.96],
+['Sadr',20.370,40.26],['Nunki',18.921,-26.30],['Kaus Australis',18.403,-34.38],['Shaula',17.560,-37.10],['Menkar',3.038,4.09],['Diphda',0.726,-17.99],
+['Alphecca',15.578,26.71],['Vindemiatrix',13.036,10.96],['Acrux',12.443,-63.10],['Rigil Kentaurus',14.660,-60.83],['Hadar',14.064,-60.37],
+['Adhara',6.977,-28.97],['Menkent',14.111,-36.37],['Zubenelgenubi',14.848,-16.04],['Sabik',17.173,-15.72],['Eltanin',17.943,51.49],
+['Alderamin',21.310,62.59],['Sadalmelik',22.096,-0.32]].map(a => ({name:a[0], ra:a[1] * 15, dec:a[2], anchor:true}));
+
+function jd(d){ return d.getTime() / 86400000 + 2440587.5; }
+function gmst(j){ const d = j - 2451545, T = d / 36525; return ((280.46061837 + 360.98564736629 * d + 0.000387933 * T * T) % 360 + 360) % 360; }
+function sunEq(date){
+  const n = jd(date) - 2451545, L = (280.460 + 0.9856474 * n) % 360, g = (357.528 + 0.9856003 * n) * D2R;
+  const lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * D2R, eps = (23.439 - 4e-7 * n) * D2R;
+  return {ra:(Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam)) / D2R + 360) % 360, dec:Math.asin(Math.sin(eps) * Math.sin(lam)) / D2R, lon:(lam / D2R + 360) % 360};
+}
+function moonInfo(date){
+  const d = jd(date) - 2451545, L = 218.316 + 13.176396 * d, M = (134.963 + 13.064993 * d) * D2R;
+  const lon = L + 6.289 * Math.sin(M), el = ((lon - sunEq(date).lon) % 360 + 360) % 360;
+  return {illum:(1 - Math.cos(el * D2R)) / 2, waxing:el < 180};
+}
+function altAz(ra, dec, lat, lstDeg){
+  const H = (lstDeg - ra) * D2R, d = dec * D2R, p = lat * D2R;
+  const sa = Math.sin(d) * Math.sin(p) + Math.cos(d) * Math.cos(p) * Math.cos(H);
+  const alt = Math.asin(Math.max(-1, Math.min(1, sa)));
+  const az = Math.atan2(-Math.cos(d) * Math.sin(H), Math.sin(d) * Math.cos(p) - Math.cos(d) * Math.sin(p) * Math.cos(H));
+  return {alt:alt / D2R, az:(az / D2R + 360) % 360};
+}
+function sunAlt(date, loc){ const s = sunEq(date); return altAz(s.ra, s.dec, loc.lat, gmst(jd(date)) + loc.lon).alt; }
+function parseDate(s){ const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0); }
+function hm(s, def){ const m = /^(\d{1,2}):(\d{2})/.exec(s || ''); return m ? +m[1] + +m[2] / 60 : def; }
+function isoDate(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+/* The observing night a moment belongs to: before 6 am it is still the previous evening's night. */
+function eveningOf(now){ const d = new Date(now); if (d.getHours() < 6) d.setDate(d.getDate() - 1); return isoDate(d); }
+
+/* The observing window for the evening of S.date, in the computer's local time. */
+function nightWindow(S){
+  const noon = parseDate(S.date), ev = {};
+  const lim = {sunset:-0.833, civil:-6, naut:-12, astro:-18};
+  let prev = sunAlt(noon, S.loc);
+  for (let m = 1; m <= 1440; m++){
+    const t = new Date(noon.getTime() + m * 60000), a = sunAlt(t, S.loc);
+    for (const k in lim){
+      if (prev > lim[k] && a <= lim[k] && !ev[k]) ev[k] = t;
+      if (prev < lim[k] && a >= lim[k] && ev[k] && !ev[k + 'Dawn']) ev[k + 'Dawn'] = t;
+    }
+    prev = a;
+  }
+  const at = h => new Date(noon.getTime() + ((h < 12 ? h + 24 : h) - 12) * 3600000);
+  let start = S.startMode === 'custom' ? at(hm(S.startTime, 19)) : (ev[S.startMode] || ev.sunset || at(19));
+  let end = at(hm(S.endTime, 0));
+  if (end <= start) end = new Date(start.getTime() + 3600000);
+  return {start, end, hours:(end - start) / 3600000, ev, lst0:(gmst(jd(start)) + S.loc.lon + 360) % 360, at,
+          lateEnd: ev.nautDawn && end > ev.nautDawn};
+}
+function lstAt(date, S){ return (gmst(jd(date)) + S.loc.lon + 360) % 360; }
+
+/* Hours (clock) above the minimum altitude either side of transit; null = never, Infinity = always. */
+function halfArc(dec, S){
+  const p = S.loc.lat * D2R, d = dec * D2R;
+  const ch = (Math.sin(S.minAlt * D2R) - Math.sin(p) * Math.sin(d)) / (Math.cos(p) * Math.cos(d));
+  if (ch >= 1) return null;
+  return ch <= -1 ? Infinity : Math.acos(ch) / D2R / 15 / SID;
+}
+/* Visibility inside the window: {from, to, tr, set, maxAlt} in hours after window start. */
+function visibility(ra, dec, S, W){
+  const h = halfArc(dec, S);
+  if (h === null) return null;
+  const h0 = h === Infinity ? 12 / SID : h;
+  const tr = (((ra - W.lst0) % 360 + 540) % 360 - 180) / 15 / SID;
+  let best = null;
+  for (const k of [-1, 0, 1]){
+    const c = tr + k * 24 / SID, a = Math.max(0, c - h0), b = Math.min(W.hours, c + h0);
+    if (b > a && (!best || b - a > best.to - best.from)) best = {from:a, to:b, tr:c, set:h === Infinity ? Infinity : c + h0};
+  }
+  if (!best) return null;
+  const altAt = t => altAz(ra, dec, S.loc.lat, W.lst0 + t * 15 * SID).alt;
+  best.maxAlt = best.tr >= best.from && best.tr <= best.to ? 90 - Math.abs(S.loc.lat - dec) : Math.max(altAt(best.from), altAt(best.to));
+  /* The sky shifts about one hour every 15 days: weeks until it is too low at window start. */
+  best.weeksLeft = h === Infinity ? Infinity : Math.max(0, best.set) * 15 / 7;
+  best.leaving = best.weeksLeft < 3 && best.tr < 0.5;
+  return best;
+}
+/* State of a target at one instant: altitude, azimuth and hours until it drops below the minimum altitude. */
+function nowState(o, date, S){
+  const lst = lstAt(date, S), p = altAz(o.ra, o.dec, S.loc.lat, lst), h = halfArc(o.dec, S);
+  let setsIn = null;
+  if (h === Infinity) setsIn = Infinity;
+  else if (h !== null){ const ha = (((lst - o.ra) % 360 + 540) % 360 - 180) / 15; if (Math.abs(ha) <= h * SID) setsIn = (h * SID - ha) / SID; }
+  return {alt:p.alt, az:p.az, up:p.alt >= S.minAlt, setsIn};
+}
+function angSep(a, b){
+  const d1 = a.dec * D2R, d2 = b.dec * D2R, dr = (a.ra - b.ra) * D2R;
+  return Math.acos(Math.max(-1, Math.min(1, Math.sin(d1) * Math.sin(d2) + Math.cos(d1) * Math.cos(d2) * Math.cos(dr)))) / D2R;
+}
+/* Direction on the sky from a to b as a compass word (north = toward Polaris, east = increasing RA). */
+function skyDir(a, b){
+  const d1 = a.dec * D2R, d2 = b.dec * D2R, dr = (b.ra - a.ra) * D2R;
+  const pa = (Math.atan2(Math.sin(dr), Math.cos(d1) * Math.tan(d2) - Math.sin(d1) * Math.cos(dr)) / D2R + 360) % 360;
+  return ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(pa / 45) % 8];
+}
+function compass(az){ return ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(az / 45) % 8]; }
+
+/* ---- equipment and program rules */
+function aperture(S){ return S.inst === 'scope' ? S.aperture : INST[S.inst].ap; }
+function limitMag(S){ return S.nelm - 4 + 5 * Math.log10(aperture(S)); }
+function rating(o, S){
+  if (o.mag == null) return {Con:'OK', Ast:'OK', Pair:'OK', DN:'OK'}[o.type] || '?';
+  const pen = STAR_TYPES[o.type] ? 0 : (o.type === 'Gal' || o.type === 'Neb') ? 1.5 : 0.5;
+  const m = limitMag(S) - o.mag - pen;
+  return STAR_TYPES[o.type] ? (m >= 3 ? 'Easy' : m >= 1 ? 'OK' : m >= 0 ? 'Hard' : 'No') : (m >= 2.5 ? 'Easy' : m >= 1 ? 'OK' : m >= 0 ? 'Hard' : 'No');
+}
+const EASE = {Easy:1, OK:0.7, Hard:0.35, '?':0.5, No:0};
+/* Why tonight's setup earns no credit in a program (and sub-list); '' when it does.
+   Rules come from each program's "Quick View of Requirements" grid (AL_META.programs[].req.qv):
+   tools E/B/T, finding method M or M/DA, visual V and/or imaging I. */
+const QV = {};
+function qvOf(pid){ if (!(pid in QV)){ const p = AL_META.programs.find(p => p.id === pid); QV[pid] = (p && p.req && p.req.qv) || null; } return QV[pid]; }
+function instWhy(pid, sub, S, skipSub){
+  const i = S.inst, bino = i === 'bino50' || i === 'bino80', q = qvOf(pid) || {tools:'T', method:'M/DA', mode:/-img$/.test(pid) ? 'I' : 'V/I'};
+  if (S.imaging && !q.mode.includes('I')) return 'visual observing only';
+  if (!S.imaging && q.mode === 'I') return 'imaging only';
+  if (S.find === 'goto' && q.method === 'M') return 'must be found by hand, no go-to';
+  if (S.imaging && i !== 'scope') return 'imaging needs the telescope';
+  if (!q.tools.includes({eye:'E', bino50:'B', bino80:'B', scope:'T'}[i])) return 'needs ' + q.tools.split('').map(t => ({E:'naked eye', B:'binoculars', T:'a telescope'}[t])).join(' or ');
+  if (skipSub) return pid === 'binomessier' && !bino ? 'needs binoculars' : '';
+  if (pid === 'binomessier' && !((i === 'bino50' && /^7x35/.test(sub || '')) || (i === 'bino80' && /^11x80/.test(sub || '')))) return 'not on the list for this binocular size';
+  if (pid === 'asterism' && (sub === 'naked-eye' ? i !== 'eye' : sub === 'binocular' ? !bino : i !== 'scope')) return 'in the ' + sub + ' section';
+  if (pid === 'solarneigh' && (sub === 'binocular' ? i === 'eye' : sub === 'telescope' ? i !== 'scope' : false)) return 'needs ' + (sub === 'binocular' ? 'binoculars' : 'a telescope');
+  return '';
+}
+function instOK(pid, sub, S){ return !instWhy(pid, sub, S); }
+function progWorks(pid, S){ return !instWhy(pid, null, S, true); }
+/* Progress is kept per list item (program + list number or list name), so it survives catalogue rebuilds. */
+function itemKey(pid, it){ return pid + '|' + (it.n ?? it.i); }
+/* Credits for one object: one entry per program, flagged on (ticked), ok (instrument), done. */
+function credits(o, S){
+  const by = {};
+  for (const p of o.progs){
+    const c = by[p.p] || (by[p.p] = {p:p.p, items:[], ok:false});
+    c.items.push(p);
+    const why = instWhy(p.p, p.s, S);
+    if (!why){ c.ok = true; c.sub = p.s; } else c.why = why;
+  }
+  return Object.values(by).map(c => { const keys = [...new Set(c.items.map(it => itemKey(c.p, it)))];
+    return Object.assign(c, {keys, on:!S.progs || S.progs[c.p] !== false, done:keys.every(k => S.done[k])}); });
+}
+function openCredits(o, S){ return credits(o, S).filter(c => c.on && c.ok && !c.done); }
+
+/* Per program: list items, how many are observed, and progress toward each certificate level. */
+function progStats(S){
+  const st = {};
+  for (const p of AL_META.programs) st[p.id] = {items:{}};
+  for (const o of AL_OBJECTS) for (const it of o.progs){ const k = itemKey(it.p, it), e = st[it.p].items[k] || (st[it.p].items[k] = {subs:[]}); e.subs.push(it.s || ''); }
+  for (const p of AL_META.programs){
+    const s = st[p.id], keys = Object.keys(s.items);
+    s.total = keys.length; s.done = keys.filter(k => S.done[k]).length;
+    s.levels = ((p.req || {}).levels || []).map(l => { const inl = k => !l.subs || s.items[k].subs.some(x => l.subs.some(y => x.startsWith(y)));
+      return {name:l.name, need:l.need, listed:keys.filter(inl).length, have:keys.filter(k => S.done[k] && inl(k)).length}; });
+  }
+  return st;
+}
+
+/* ---- candidates for the whole window */
+function evaluate(o, S, W){
+  const cr = credits(o, S), open = cr.filter(c => c.on && c.ok && !c.done), earned = cr.filter(c => c.on && c.ok && c.done);
+  if (!open.length && !(earned.length && !S.hideDone)) return null;
+  const rate = rating(o, S);
+  if (rate === 'No' && !S.showHard) return null;
+  if (rate === '?' && !S.showNoMag) return null;
+  const v = visibility(o.ra, o.dec, S, W);
+  if (!v) return null;
+  const urg = v.leaving ? 1 : v.weeksLeft < 6 && v.tr < 1 ? 0.5 : 0;
+  const score = Math.round(40 * Math.min(open.length, 5) / 5 + 25 * EASE[rate] + 20 * urg + 15 * Math.min(v.maxAlt, 70) / 70);
+  return {o, v, rate, open, earned, n:open.length, score};
+}
+function filterCatalog(S, W){
+  const out = [];
+  for (const o of AL_OBJECTS){ const x = evaluate(o, S, W); if (x) out.push(x); }
+  return out;
+}
+/* ---- what to hop to next from `from` at instant `date` */
+function nextFrom(from, date, S, W, cands){
+  const out = [];
+  for (const x of cands){
+    if (!x.n || x.o === from) continue;
+    const st = nowState(x.o, date, S);
+    if (!st.up) continue;
+    const dist = from ? angSep(from, x.o) : 0;
+    if (from && dist > S.radius) continue;
+    const s = st.setsIn, urg = s < 0.5 ? 1 : s < 3 ? (3 - s) / 2.5 : x.v.leaving ? 0.4 : 0;
+    const near = from ? 1 - dist / S.radius : Math.min(st.alt, 70) / 70;
+    const score = Math.round(35 * Math.min(x.n, 5) / 5 + 30 * near + 15 * EASE[x.rate] + 20 * urg);
+    out.push({x, st, dist, dir:from ? skyDir(from, x.o) : '', score});
+  }
+  return out.sort((a, b) => b.score - a.score);
+}
+/* ---- auto-suggest and schedule */
+function suggest(cands, N, perCon){
+  const used = {}, out = [];
+  for (const x of cands.filter(x => x.n).sort((a, b) => b.score - a.score)){
+    if ((used[x.o.con] || 0) >= perCon) continue;
+    used[x.o.con] = (used[x.o.con] || 0) + 1;
+    out.push(x);
+    if (out.length >= N) break;
+  }
+  return out;
+}
+/* West to east: take the constellation whose visible members set soonest, finish it by nearest neighbour. */
+function schedule(items, W, perTargetMin){
+  const step = perTargetMin / 60, left = items.slice(), out = [];
+  let t = 0, last = null;
+  while (left.length){
+    const ready = left.filter(x => x.v.from <= t + 1e-6 && x.v.to > t);
+    if (!ready.length){
+      const future = left.filter(x => x.v.from > t);
+      if (!future.length){ left.forEach(x => out.push({x, t:null, missed:true})); break; }
+      t = Math.min(...future.map(x => x.v.from));
+      continue;
+    }
+    const bySet = {};
+    for (const x of ready) bySet[x.o.con] = Math.min(bySet[x.o.con] ?? Infinity, x.v.to);
+    const con = Object.keys(bySet).sort((a, b) => bySet[a] - bySet[b])[0];
+    let group = ready.filter(x => x.o.con === con);
+    while (group.length){
+      group = group.filter(x => x.v.to > t);
+      if (!group.length) break;
+      const pick = last ? group.reduce((a, b) => angSep(last.o, a.o) <= angSep(last.o, b.o) ? a : b) : group.reduce((a, b) => a.v.to <= b.v.to ? a : b);
+      out.push({x:pick, t});
+      left.splice(left.indexOf(pick), 1);
+      group.splice(group.indexOf(pick), 1);
+      last = pick;
+      t += step;
+    }
+  }
+  return out;
+}
+/* ---- formatting and export */
+function pad(n, w = 2){ return String(n).padStart(w, '0'); }
+function fmtRA(d){ let s = Math.round(d / 15 * 600) / 10; const h = Math.floor(s / 60) % 24; s -= Math.floor(s / 60) * 60; return pad(h) + 'h ' + pad(s.toFixed(1), 4) + 'm'; }
+function fmtDec(d){ let s = Math.round(Math.abs(d) * 60); const dd = Math.floor(s / 60); return (d < 0 ? '-' : '+') + pad(dd) + '° ' + pad(s - dd * 60) + "'"; }
+function fmtT(d){ return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function tAt(W, h){ return new Date(W.start.getTime() + h * 3600000); }
+function fmtDur(h){ if (h === Infinity) return 'always up'; if (h == null) return ''; const m = Math.round(h * 60); return m < 60 ? m + ' min' : Math.floor(m / 60) + 'h ' + pad(m % 60) + 'm'; }
+function progName(pid){ const p = AL_META.programs.find(p => p.id === pid); return p ? p.name : pid; }
+function csvRows(sched, S, W){
+  const rows = [['#', 'Time', 'Target', 'Other names', 'Type', 'Constellation', 'RA (J2000)', 'Dec (J2000)', 'Magnitude', 'Size', 'Difficulty', 'Counts toward', 'Visible until', 'Max altitude', 'Note']];
+  sched.forEach((s, i) => {
+    const o = s.x.o, v = s.x.v;
+    rows.push([i + 1, s.t == null ? '' : fmtT(tAt(W, s.t)), o.name, (o.alt || []).slice(0, 3).join('; '), TYPE_NAME[o.type] || o.type, o.con, fmtRA(o.ra), fmtDec(o.dec),
+      o.mag ?? '', o.size || '', s.x.rate, s.x.open.map(c => progName(c.p) + (c.sub ? ' (' + c.sub + ')' : '')).join('; '),
+      !v ? '' : v.set === Infinity ? 'all night' : fmtT(tAt(W, v.to)), v ? Math.round(v.maxAlt) + '°' : '',
+      s.down ? 'not up in the window' : s.missed ? 'does not fit in the window' : v && v.leaving ? 'leaving the evening sky soon' : '']);
+  });
+  return rows;
+}
+function toCSV(rows){ return '﻿' + rows.map(r => r.map(v => { v = String(v ?? ''); return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',')).join('\r\n') + '\r\n'; }
+
+/* ---- exports for chart programs. Both match objects by catalogue designation, so targets they do not know are skipped by them. */
+const DESIG = /^(M|NGC|IC|HIP|HD|SAO|HR|UGC|PGC|MCG|ESO|Mel|Cr|Tr|Berkeley|Berk|King|Stock|B|LDN|Sh2|Abell|PK|STF|STT|Arp) ?[-+\d]/;
+function designations(o){
+  const all = [o.name].concat(o.alt || []).map(n => n.replace(/\s*\(.*\)\s*$/, '').replace(/^(M|NGC|IC)(\d)/, '$1 $2')).filter(n => DESIG.test(n) && !/^C \d/.test(n));
+  const rank = n => /^M \d/.test(n) ? 0 : /^(NGC|IC) /.test(n) ? 1 : /^(HIP|HD|SAO|HR) /.test(n) ? 2 : 3;
+  return [...new Set(all.map(n => n.replace(/^Berk /, 'Berkeley ').replace(/^(HIP|HD|SAO|HR)(\d)/, '$1 $2')))].sort((a, b) => rank(a) - rank(b));
+}
+function exportable(list){ return list.filter(s => s.x.o.type !== 'Con' && s.x.o.type !== 'Pair'); }
+function creditText(x){ return x.open.map(c => progName(c.p)).join(', '); }
+/* SkySafari observing list (.skylist, version 3.0 text format). */
+function toSkylist(list){
+  const out = ['SkySafariObservingListVersion=3.0'];
+  for (const s of exportable(list)){
+    const o = s.x.o, ds = designations(o), common = [o.name].concat(o.alt || []).find(n => !/\d/.test(n));
+    out.push('SkyObject=BeginObject', '\tObjectID=' + (STAR_TYPES[o.type] && o.type !== 'QSO' ? 2 : 4) + ',-1,-1');
+    (ds.length ? ds : [o.name]).forEach(d => out.push('\tCatalogNumber=' + d));
+    if (common) out.push('\tCommonName=' + common);
+    if (creditText(s.x)) out.push('\tComment=AL: ' + creditText(s.x));
+    out.push('EndObject=SkyObject');
+  }
+  return out.join('\n') + '\n';
+}
+/* Stellarium observing list (JSON, ObservingLists version 2.1). */
+function toStellarium(list, title, now){
+  const stamp = isoDate(now) + ' ' + fmtT(now) + ':00', id = '{' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => ((c === 'x' ? Math.random() * 16 : 8 + Math.random() * 4) | 0).toString(16)) + '}';
+  const hms = d => { let t = Math.round(d / 15 * 36000) / 10; const h = Math.floor(t / 3600); t -= h * 3600; const m = Math.floor(t / 60); return h + 'h' + pad(m) + 'm' + pad((t - m * 60).toFixed(1), 4) + 's'; };
+  const dms = d => { let t = Math.round(Math.abs(d) * 3600); const g = Math.floor(t / 3600); t -= g * 3600; return (d < 0 ? '-' : '+') + g + '\u00b0' + pad(Math.floor(t / 60)) + "'" + pad(t % 60) + '"'; };
+  const objects = exportable(list).map(s => { const o = s.x.o, ds = designations(o);
+    return {constellation:o.con, dec:dms(o.dec), designation:ds[0] || o.name, fov:0, isVisibleMarker:false, jd:0, landscapeID:'', location:'', magnitude:o.mag == null ? '' : String(o.mag),
+      name:ds[0] && ds[0] !== o.name ? o.name : '', ra:hms(o.ra), type:TYPE_NAME[o.type] || o.type}; });
+  return JSON.stringify({defaultListOlud:id, observingLists:{[id]:{'creation date':stamp, description:'Exported from the AL Observing Program Planner', 'last edit':stamp, name:title, objects, sorting:''}},
+    shortName:'Observing list for Stellarium', version:'2.1'}, null, 4);
+}
+
+if (typeof module !== 'undefined') module.exports = {toSkylist, toStellarium, designations,DEFAULTS, ANCHORS, nightWindow, visibility, nowState, angSep, skyDir, limitMag, rating, instOK, instWhy, credits, openCredits, itemKey, progStats,
+  evaluate, filterCatalog, nextFrom, suggest, schedule, csvRows, toCSV, eveningOf, fmtT, tAt, fmtDur, progName, moonInfo};
+
+/* ====================================================================== UI */
+if (typeof document !== 'undefined') (function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[c]));
+  let S = JSON.parse(JSON.stringify(DEFAULTS));
+  try { const o = JSON.parse(localStorage.getItem('alp_state') || '{}'); S = Object.assign(S, o); S.loc = Object.assign({}, DEFAULTS.loc, o.loc); } catch (e) {}
+  if (!S.progs){ S.progs = {}; AL_META.programs.forEach(p => S.progs[p.id] = true); }
+  S.date = eveningOf(new Date());
+  const save = () => { try { localStorage.setItem('alp_state', JSON.stringify(S)); } catch (e) {} fileSoon(); };
+  const byName = {};
+  AL_OBJECTS.forEach(o => byName[o.name] = o);
+  let W, cands = [], sel = null, sort = {k:'score', d:-1}, timer, sched = [], rows = [];
+  /* Marks made before progress was kept per list item used "target|program"; convert them once. */
+  for (const k of Object.keys(S.done)){
+    const i = k.lastIndexOf('|'), o = byName[k.slice(0, i)], pid = k.slice(i + 1);
+    if (i > 0 && o && AL_META.programs.some(p => p.id === pid)){ o.progs.filter(it => it.p === pid).forEach(it => S.done[itemKey(pid, it)] = S.done[k]); delete S.done[k]; }
+  }
+
+  /* ---- settings */
+  const FIELDS = ['minAlt', 'perTarget', 'aperture', 'nelm'], CHECKS = ['imaging', 'hideDone', 'showHard', 'showNoMag'];
+  function toInputs(){
+    $('date').value = S.date; $('lat').value = S.loc.lat; $('lon').value = S.loc.lon;
+    FIELDS.forEach(k => $(k).value = S[k]); CHECKS.forEach(k => $(k).checked = S[k]);
+    $('startMode').value = S.startMode; $('endTime').value = S.endTime; $('inst').value = S.inst; $('find').value = S.find;
+    document.body.classList.toggle('red', S.red); $('b-red').classList.toggle('on', S.red);
+  }
+  function fromInputs(){
+    S.date = $('date').value || S.date;
+    const lat = parseFloat($('lat').value), lon = parseFloat($('lon').value);
+    if (lat >= -90 && lat <= 90) S.loc.lat = lat;
+    if (lon >= -180 && lon <= 180) S.loc.lon = lon;
+    FIELDS.forEach(k => { const v = parseFloat($(k).value); if (!isNaN(v)) S[k] = v; });
+    CHECKS.forEach(k => S[k] = $(k).checked);
+    S.startMode = $('startMode').value; S.endTime = $('endTime').value; S.inst = $('inst').value; S.find = $('find').value;
+    if (S.startMode === 'custom') S.startTime = $('startTime').value;
+  }
+  function changed(){ clearTimeout(timer); timer = setTimeout(() => { fromInputs(); save(); recompute(); }, 200); }
+  document.querySelectorAll('#side input, #side select, #date').forEach(el => el.addEventListener(el.type === 'text' || el.type === 'number' ? 'input' : 'change', changed));
+  $('startTime').addEventListener('input', () => { $('startMode').value = 'custom'; });
+  $('b-red').onclick = () => { S.red = !S.red; save(); toInputs(); drawDetail(); };
+  $('b-side').onclick = () => document.body.classList.toggle('showside');
+  $('b-about').onclick = () => { $('about-meta').textContent = `Catalogue built ${AL_META.built}: ${AL_META.objects} objects from ${AL_META.programs.length} program lists.`; $('about').showModal(); };
+  $('b-close').onclick = () => $('about').close();
+  $('b-geo').onclick = () => {
+    if (!navigator.geolocation) return void ($('status').textContent = 'This browser cannot report a location; type your latitude and longitude.');
+    navigator.geolocation.getCurrentPosition(p => { S.loc = {lat:+p.coords.latitude.toFixed(2), lon:+p.coords.longitude.toFixed(2)}; save(); toInputs(); recompute(); },
+      () => { $('status').textContent = 'Location was not shared; type your latitude and longitude.'; });
+  };
+  $('b-all').onclick = () => { AL_META.programs.forEach(p => S.progs[p.id] = true); save(); recompute(); };
+  $('b-none').onclick = () => { AL_META.programs.forEach(p => S.progs[p.id] = false); save(); recompute(); };
+
+  function renderProgs(){
+    const st = progStats(S);
+    let h = '';
+    for (const cat of [['deepsky', 'Deep sky'], ['stellar', 'Stars']]){
+      h += `<div class="note"><b>${cat[1]}</b></div>`;
+      for (const p of AL_META.programs.filter(p => p.category === cat[0])){
+        const no = instWhy(p.id, null, S, true), works = !no;
+        h += `<label class="chk${works ? '' : ' off'}" title="${works ? '' : 'No credit tonight: ' + no}"><input type="checkbox" data-p="${p.id}"${S.progs[p.id] !== false ? ' checked' : ''}> ${esc(p.name)}<span class="cnt">${st[p.id].done}/${st[p.id].total}</span></label>`;
+      }
+    }
+    $('progs').innerHTML = h;
+    $('progs').querySelectorAll('input').forEach(el => el.onchange = () => { S.progs[el.dataset.p] = el.checked; save(); recompute(); });
+    return st;
+  }
+
+  /* ---- compute */
+  function atDate(){
+    if (S.at === 'now') return new Date();
+    if (S.at === 'start') return W.start;
+    return W.at(hm(S.atTime, W.start.getHours() + W.start.getMinutes() / 60));
+  }
+  function anchorObj(){ return S.anchor ? (byName[S.anchor] || ANCHORS.find(a => a.name.toLowerCase() === S.anchor.toLowerCase()) || AL_OBJECTS.find(o => o.name.toLowerCase() === S.anchor.toLowerCase() || (o.alt || []).some(a => a.toLowerCase() === S.anchor.toLowerCase())) || null) : null; }
+  function recompute(){
+    W = nightWindow(S);
+    $('startTime').value = S.startMode === 'custom' ? S.startTime : fmtT(W.start);
+    $('row-ap').style.display = S.inst === 'scope' ? '' : 'none';
+    const lm = limitMag(S);
+    $('eq-note').innerHTML = `With the ${INST[S.inst].label}${S.inst === 'scope' ? ' (' + S.aperture + ' mm)' : ''} the faintest star is about magnitude <b>${lm.toFixed(1)}</b>.`;
+    const mo = moonInfo(W.start);
+    $('night-info').textContent = `${fmtT(W.start)} to ${fmtT(W.end)} · Moon ${Math.round(mo.illum * 100)}% ${mo.waxing ? 'waxing' : 'waning'}`;
+    cands = filterCatalog(S, W);
+    rebuildPlan();
+    render();
+  }
+  function rebuildPlan(){
+    const loose = Object.assign({}, S, {hideDone:false, showHard:true, showNoMag:true});
+    const items = S.plan.map(n => byName[n]).filter(Boolean).map(o => evaluate(o, loose, W) || {o, v:visibility(o.ra, o.dec, S, W), rate:rating(o, S), open:openCredits(o, S), earned:[], n:openCredits(o, S).length, score:0});
+    sched = schedule(items.filter(x => x.v), W, S.perTarget).concat(items.filter(x => !x.v).map(x => ({x, t:null, missed:true, down:true})));
+  }
+  function inPlan(o){ return S.plan.includes(o.name); }
+  function togglePlan(o){ const i = S.plan.indexOf(o.name); if (i >= 0) S.plan.splice(i, 1); else S.plan.push(o.name); save(); rebuildPlan(); render(); }
+  function toggleDone(o){
+    const cr = credits(o, S).filter(c => c.on && c.ok);
+    const all = cr.length && cr.every(c => c.done);
+    cr.forEach(c => c.keys.forEach(k => { if (all) delete S.done[k]; else if (!S.done[k]) S.done[k] = S.date; }));
+    save(); recompute();
+  }
+
+  /* ---- tabs */
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; save(); render(); });
+  $('b-suggest').onclick = () => {
+    const n = Math.max(5, Math.floor(W.hours * 60 / S.perTarget));
+    S.plan = suggest(cands, n, 6).map(x => x.o.name); S.tab = 'plan'; save(); rebuildPlan(); render();
+  };
+  $('b-exp').onchange = e => {
+    const kind = e.target.value; e.target.value = '';
+    if (!kind) return;
+    const list = S.tab === 'plan' ? sched : rows.map(x => ({x, t:null})), n = exportable(list).length, title = `AL plan ${S.date}`;
+    if (!list.length) return void ($('status').textContent = 'There is nothing in this list to export.');
+    const file = {csv:[toCSV(csvRows(list, S, W)), 'text/csv', '.csv'], skylist:[toSkylist(list), 'text/plain', '.skylist'], stellarium:[toStellarium(list, title, new Date()), 'application/json', '.json']}[kind];
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([file[0]], {type:file[1]})); a.download = `AL-plan-${S.date}${file[2]}`; a.click();
+    if (kind !== 'csv') $('status').textContent = `Exported ${n} targets` + (n < list.length ? ` (${list.length - n} constellations or pairs left out)` : '') + `. ${kind === 'skylist' ? 'SkySafari' : 'Stellarium'} only shows targets it knows by these catalogue names, so some may be missing there. `
+      + 'If you are working on a program that must be found by hand, check its rules before using an app that shows where the telescope points.';
+  };
+  $('b-print').onclick = () => window.print();
+
+  /* Search: every word must occur; "M31" also finds "M 31". */
+  function hit(o, extra){
+    const q = (S.q || '').toLowerCase().trim();
+    if (!q) return true;
+    const hay = (o.name + ' ' + (o.alt || []).join(' ') + ' ' + o.type + ' ' + (TYPE_NAME[o.type] || '') + ' ' + o.con + ' ' + (extra || '')).toLowerCase();
+    const qn = q.replace(/\s+/g, '');
+    /* A catalogue designation such as "m31" or "ngc 70": match names that start with it, nothing else. */
+    if (/^[a-z]{1,5}\d+[a-z]?$/.test(qn)) return [o.name].concat(o.alt || [], extra ? [extra.split(' (')[0]] : []).some(n => n.toLowerCase().replace(/\s+/g, '').startsWith(qn));
+    return q.split(/\s+/).every(w => hay.includes(w)) || hay.replace(/\s+/g, '').includes(qn);
+  }
+  const found = (n, all) => (S.q || '').trim() ? ` Search "${S.q.trim()}" shows ${n} of ${all}.` : '';
+  $('q').value = S.q || '';
+  $('q').oninput = e => { S.q = e.target.value; clearTimeout(timer); timer = setTimeout(render, 200); };
+  const natural = (a, b) => String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'});
+  const TEXT_KEYS = {name:1, con:1, type:1, mag:1, set:1, no:1, group:1, date:1, hop:1, tonight:1, rate:1};
+  /* Sort a list by the chosen column of a sort state {k, d}; empty values go last. */
+  function sortBy(list, st, keys){
+    const key = keys[st.k];
+    if (!key) return list;
+    return list.sort((a, b) => { const A = key(a), B = key(b), ea = A == null || A === '', eb = B == null || B === '';
+      return ea || eb ? ea - eb : (typeof A === 'number' && typeof B === 'number' ? A - B : natural(A, B)) * st.d; });
+  }
+  const RATE_ORDER = {Easy:0, OK:1, Hard:2, '?':3, No:4};
+  const tipI = t => `<span class="i" tabindex="0" data-tip="${esc(t)}">i</span>`;
+  const TIP_DIFF = 'How hard the target is with the instrument and sky set for tonight. Easy, OK or Hard come from its magnitude against your limiting magnitude, with galaxies and nebulae treated as harder than stars. A question mark means no magnitude is known.';
+  const TIP_CRED = 'The programs this target earns credit in tonight: ticked, allowed with the setup chosen for tonight, and not yet marked observed. The number is how many.';
+  /* One floating balloon for every (i): shown on hover or keyboard focus, toggled by tap, kept inside the window. */
+  const tipBox = $('tip');
+  let tipFor = null;
+  function showTip(el){
+    tipFor = el; tipBox.textContent = el.dataset.tip; tipBox.style.display = 'block';
+    const r = el.getBoundingClientRect(), w = tipBox.offsetWidth || 300, h = tipBox.offsetHeight || 60;
+    const x = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8));
+    tipBox.style.left = x + 'px'; tipBox.style.top = (r.bottom + h + 12 > window.innerHeight ? Math.max(8, r.top - h - 8) : r.bottom + 8) + 'px';
+  }
+  function hideTip(){ tipFor = null; tipBox.style.display = 'none'; }
+  const isI = e => e.target && e.target.classList && e.target.classList.contains('i') ? e.target : null;
+  document.addEventListener('mouseover', e => { const el = isI(e); if (el) showTip(el); });
+  document.addEventListener('mouseout', e => { if (isI(e)) hideTip(); });
+  document.addEventListener('focusin', e => { const el = isI(e); if (el) showTip(el); });
+  document.addEventListener('focusout', e => { if (isI(e)) hideTip(); });
+  /* Tap or click: show the balloon and keep the click from sorting a column or ticking a box. */
+  document.addEventListener('click', e => { const el = isI(e); if (el){ e.preventDefault(); e.stopPropagation(); showTip(el); } else if (tipFor) hideTip(); }, true);
+  window.addEventListener('scroll', hideTip, true);
+  const nsort = {k:'', d:-1}, csort = {k:'', d:1};
+  const creditBadges = x => `<span class="badge c">${x.n}</span>` + x.open.slice(0, 4).map(c => `<span class="badge">${esc(progName(c.p))}</span>`).join('') + (x.open.length > 4 ? '…' : '');
+  const until = x => x.v.set === Infinity ? 'all night' : fmtT(tAt(W, x.v.to));
+  const flag = x => x.v && x.v.leaving ? '<span class="warn" title="Leaving the evening sky within about three weeks">leaving soon</span>' : '';
+  function head(cols, st = sort){
+    $('th').innerHTML = '<tr>' + cols.map(c => `<th class="${c[2] || ''}${c[1] ? '' : ' ns'}" data-k="${c[1] || ''}"${c[1] ? ' title="Click to sort"' : ''}>${c[0]}${c[1] && st.k === c[1] ? (st.d > 0 ? ' \u25b2' : ' \u25bc') : ''}${c[3] ? tipI(c[3]) : ''}</th>`).join('') + '</tr>';
+    $('th').querySelectorAll('th').forEach(th => { if (th.dataset.k) th.onclick = e => { if (e.target.classList.contains('i')) return; const k = th.dataset.k; st.d = st.k === k ? -st.d : (TEXT_KEYS[k] ? 1 : -1); st.k = k; render(); }; });
+  }
+  function body(html){
+    $('tb').innerHTML = html;
+    $('tb').querySelectorAll('tr.r').forEach(tr => { tr.onclick = e => {
+      const o = byName[tr.dataset.n], act = e.target.dataset.act;
+      if (act === 'plan') return togglePlan(o);
+      if (act === 'here'){ S.anchor = o.name; S.tab = 'next'; save(); }
+      sel = o; render();
+    }; });
+  }
+  const planBtn = o => `<button class="x" data-act="plan" title="${inPlan(o) ? 'Remove from' : 'Add to'} my plan">${inPlan(o) ? '−' : '+'}</button>`;
+  const hereBtn = '<button class="x" data-act="here" title="I am on this target now: rank what is near it">go</button>';
+
+  function render(){
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
+    ({next:renderNext, tonight:renderTonight, plan:renderPlan, progress:renderProgress}[S.tab] || renderNext)();
+    if (S.tab !== 'progress') renderProgs();
+    $('b-exp').style.display = S.tab === 'progress' && !S.prog ? 'none' : '';
+    drawDetail();
+  }
+  function renderNext(){
+    const names = ANCHORS.map(a => a.name).concat(AL_OBJECTS.map(o => o.name));
+    $('bar').innerHTML = `<span>I am on${tipI('Type the star or target your telescope is on now, for example Deneb or M 13. The list then ranks what is worth hopping to from there. Leave it empty to rank everything that is up.')}</span><input type="text" id="anchor" list="anchors" placeholder="star or target, e.g. Deneb" value="${esc(S.anchor)}"><datalist id="anchors">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+      <span>within</span><input type="number" id="radius" min="2" max="90" value="${S.radius}"><span>° at${tipI('The moment the ranking is for. Now follows the clock and refreshes every minute. Choose a time to plan ahead.')}</span>
+      <select id="at"><option value="now">now</option><option value="start">start of window</option><option value="time">time</option></select><input type="text" id="atTime" style="width:58px" placeholder="21:30" value="${esc(S.atTime)}">`;
+    $('at').value = S.at; $('atTime').style.display = S.at === 'time' ? '' : 'none';
+    $('anchor').onchange = e => { S.anchor = e.target.value.trim(); save(); render(); };
+    $('radius').onchange = e => { S.radius = Math.min(90, Math.max(2, +e.target.value || 25)); save(); render(); };
+    $('at').onchange = e => { S.at = e.target.value; save(); render(); };
+    $('atTime').onchange = e => { S.atTime = e.target.value; save(); render(); };
+    const from = anchorObj(), when = atDate(), ranked = nextFrom(from, when, S, W, cands);
+    const list = sortBy(ranked.filter(r => hit(r.x.o, r.x.open.map(c => progName(c.p)).join(' '))), nsort,
+      {name:r => r.x.o.name, type:r => r.x.o.type, mag:r => r.x.o.mag, hop:r => r.dist, alt:r => r.st.alt, stays:r => r.st.setsIn, rate:r => RATE_ORDER[r.x.rate], n:r => r.x.n, score:r => r.score});
+    rows = list.slice(0, 300).map(r => r.x);
+    let msg = from ? `${ranked.length} targets within ${S.radius}° of ${from.name} are up at ${fmtT(when)}.`
+      : (S.anchor ? `"${S.anchor}" is not a star or target in the lists. ` : 'Type where you are pointing to rank nearby targets. ') + `Showing the best ${Math.min(ranked.length, 300)} targets up at ${fmtT(when)}.`;
+    if (from){ const st = nowState(from, when, S); if (!st.up) msg += ` Note: ${from.name} itself is ${st.alt < 0 ? 'below the horizon' : 'below your minimum altitude'} then.`; }
+    if (sunAlt(when, S.loc) > -6) msg += ' The Sun is up or it is bright twilight at that time.';
+    $('status').textContent = msg + found(list.length, ranked.length);
+    head([['', ''], ['Target', 'name'], ['Type', 'type'], ['Mag', 'mag', 'num'], ['Hop', from ? 'hop' : '', 'num', 'Distance and direction on the sky from where you are now. North is toward Polaris, east is the direction of increasing right ascension.'], ['Now', 'alt', '', 'Altitude above the horizon and compass direction at the chosen time.'], ['Stays up', 'stays', 'num', 'How long until the target drops below your minimum altitude. Orange means under an hour.'], ['Difficulty', 'rate', '', TIP_DIFF], ['Counts toward', 'n', '', TIP_CRED], ['Rank', 'score', 'num', 'Out of 100. More credits, a shorter hop, an easier target and one that sets soon all raise it. The go button makes that target your new starting point.']], nsort);
+    body(list.slice(0, 300).map(r => { const o = r.x.o;
+      return `<tr class="r${sel === o ? ' sel' : ''}" data-n="${esc(o.name)}"><td>${planBtn(o)}</td><td>${esc(o.name)}</td><td>${o.type}</td><td class="num">${o.mag ?? ''}</td>
+        <td class="num">${from ? r.dist.toFixed(1) + '° ' + r.dir : ''}</td><td>${Math.round(r.st.alt)}° ${compass(r.st.az)}</td><td class="num${r.st.setsIn < 1 ? ' warn' : ''}">${fmtDur(r.st.setsIn)}</td>
+        <td class="r-${r.x.rate}">${r.x.rate}</td><td>${creditBadges(r.x)} ${flag(r.x)}</td><td class="num">${r.score} ${hereBtn}</td></tr>`; }).join(''));
+  }
+  function renderTonight(){
+    $('bar').innerHTML = '';
+    const list = sortBy(cands.filter(x => hit(x.o, x.open.map(c => progName(c.p)).join(' '))), sort.k ? sort : {k:'score', d:-1},
+      {score:x => x.score, n:x => x.n, name:x => x.o.name, con:x => x.o.con, mag:x => x.o.mag, alt:x => x.v.maxAlt, set:x => x.v.to, type:x => x.o.type, rate:x => RATE_ORDER[x.rate]});
+    rows = list;
+    $('status').textContent = `${list.length} targets earn credit tonight between ${fmtT(W.start)} and ${fmtT(W.end)}` + (list.length > 400 ? '; showing the first 400 (CSV export has all).' : '.') + (W.lateEnd ? ' The window runs past nautical dawn.' : '') + found(list.length, cands.length);
+    head([['', ''], ['Target', 'name'], ['Type', 'type'], ['Con', 'con'], ['Mag', 'mag', 'num'], ['Difficulty', 'rate', '', TIP_DIFF], ['Credits', 'n', '', TIP_CRED], ['Max alt', 'alt', 'num'], ['Visible until', 'set', '', 'When the target drops below your minimum altitude, or the end of your window. Leaving soon means it will be gone from the evening sky within about three weeks.'], ['Score', 'score', 'num', 'Out of 100 for tonight as a whole: credits earned, difficulty, how soon it leaves the evening sky, and how high it climbs.']]);
+    body(list.slice(0, 400).map(x => { const o = x.o;
+      return `<tr class="r${sel === o ? ' sel' : ''}${x.n ? '' : ' done'}" data-n="${esc(o.name)}"><td>${planBtn(o)}</td><td>${esc(o.name)}</td><td>${o.type}</td><td>${o.con}</td><td class="num">${o.mag ?? ''}</td>
+        <td class="r-${x.rate}">${x.rate}</td><td>${x.n ? creditBadges(x) : 'observed'} ${flag(x)}</td><td class="num">${Math.round(x.v.maxAlt)}°</td><td>${until(x)}</td><td class="num">${x.score}</td></tr>`; }).join(''));
+  }
+  function renderPlan(){
+    $('bar').innerHTML = `<span>${S.plan.length} targets in my plan${tipI('Add targets with the + in any list. The plan is ordered west to east so nothing sets before you reach it, constellation by constellation. Times use your minutes per target.')}</span><button id="b-clear">Clear plan</button>`;
+    $('b-clear').onclick = () => { if (!S.plan.length || confirm('Remove all targets from the plan?')){ S.plan = []; save(); rebuildPlan(); render(); } };
+    const shown = sched.filter(s => hit(s.x.o, s.x.open.map(c => progName(c.p)).join(' ')));
+    rows = shown.map(s => s.x);
+    const missed = sched.filter(s => s.missed).length;
+    $('status').textContent = sched.length ? `Ordered west to east, ${S.perTarget} minutes each.` + (missed ? ` ${missed} cannot be fitted or are not up tonight.` : '') : 'The plan is empty. Add targets with + or press "Suggest a night".';
+    $('status').textContent += found(shown.length, sched.length);
+    head([['', ''], ['Time', ''], ['Target', ''], ['Type', ''], ['Mag', '', 'num'], ['Difficulty', '', '', TIP_DIFF], ['Counts toward', '', '', TIP_CRED], ['Visible until', ''], ['', '']]);
+    let h = '', con = null;
+    for (const s of shown){ const o = s.x.o;
+      if (!s.missed && o.con !== con){ con = o.con; h += `<tr class="grp"><td colspan="9">${con}</td></tr>`; }
+      h += `<tr class="r${sel === o ? ' sel' : ''}" data-n="${esc(o.name)}"><td>${planBtn(o)}</td><td>${s.t == null ? '<span class="warn">' + (s.down ? 'not up' : 'no room') + '</span>' : fmtT(tAt(W, s.t))}</td><td>${esc(o.name)}</td><td>${o.type}</td><td class="num">${o.mag ?? ''}</td>
+        <td class="r-${s.x.rate}">${s.x.rate}</td><td>${s.x.n ? creditBadges(s.x) : '<span class="badge">no open credit</span>'} ${flag(s.x)}</td><td>${s.x.v ? until(s.x) : ''}</td><td>${hereBtn}</td></tr>`; }
+    body(h);
+  }
+  /* ---- progress file: keep observed marks in a file the user chooses (Chromium browsers), else download/import */
+  const FS = typeof window.showSaveFilePicker === 'function';
+  let fh = null, pending = null, fileTimer, fileMsg = '';
+  const payload = () => ({app:'AL Observing Program Planner', version:1, saved:new Date().toISOString(), done:S.done, progs:S.progs});
+  function idb(mode, fn){ return new Promise(res => { try { const rq = indexedDB.open('alp', 1); rq.onupgradeneeded = () => rq.result.createObjectStore('kv');
+      rq.onsuccess = () => { try { const tx = rq.result.transaction('kv', mode), q = fn(tx.objectStore('kv')); tx.oncomplete = () => res(q && q.result); tx.onerror = () => res(null); } catch (e) { res(null); } };
+      rq.onerror = () => res(null); } catch (e) { res(null); } }); }
+  function fileInfo(){
+    $('file-info').textContent = fh ? 'Progress file: ' + fh.name + (fileMsg ? ' · ' + fileMsg : '') : pending ? 'Progress file ' + pending.name + ' not connected' : 'Progress: this browser only';
+    $('file-info').className = fh ? '' : 'warn';
+  }
+  async function writeFile(){
+    if (!fh) return;
+    try { const w = await fh.createWritable(); await w.write(JSON.stringify(payload(), null, 1)); await w.close(); fileMsg = 'saved ' + fmtT(new Date()); }
+    catch (e) { fileMsg = ''; pending = fh; fh = null; $('status').textContent = 'Could not write the progress file (' + e.message + '). Reconnect it on the Progress tab.'; }
+    fileInfo();
+  }
+  function fileSoon(){ if (fh){ clearTimeout(fileTimer); fileTimer = setTimeout(writeFile, 400); } }
+  function mergeMarks(d){
+    if (!d || typeof d.done !== 'object' || !d.done) throw new Error('not a progress file');
+    let n = 0;
+    for (const k in d.done) if (!S.done[k]){ S.done[k] = d.done[k]; n++; }
+    return n;
+  }
+  async function useFile(h, readFirst){
+    let n = 0;
+    if (readFirst){ const t = await (await h.getFile()).text(); if (t.trim()) n = mergeMarks(JSON.parse(t)); }
+    fh = h; pending = null; idb('readwrite', s => s.put(h, 'file'));
+    save(); await writeFile(); recompute();
+    $('status').textContent = `Progress is now saved to ${h.name} every time you change a mark.` + (readFirst ? ` ${n} marks were added from the file.` : '');
+  }
+  const pickOpts = {suggestedName:'AL-observed.json', types:[{description:'AL planner progress', accept:{'application/json':['.json']}}]};
+  const fileAct = fn => async () => { try { await fn(); } catch (e) { if (e.name !== 'AbortError') $('status').textContent = 'That did not work: ' + (e.message || e); } };
+  if (FS) idb('readonly', s => s.get('file')).then(h => { if (h && !fh){ pending = h; fileInfo(); } });
+
+  function renderProgress(){
+    const st = renderProgs();
+    if (S.prog && AL_META.programs.some(p => p.id === S.prog)) return renderChecklist(S.prog, st);
+    $('bar').innerHTML = (FS ? `<button id="b-fnew" class="pri">Save progress to a file…</button><button id="b-fopen">Open a progress file…</button>${pending ? `<button id="b-frec">Reconnect ${esc(pending.name)}</button>` : ''}` : '')
+      + `<button id="b-dl">Download a copy</button><button id="b-imp">Import a copy</button>${tipI('Save progress to a file links a file on this computer and writes every change to it; the browser asks to reconnect it once per visit. Download and Import work in every browser. Importing only adds marks, it never removes any.')}<input type="file" id="f-imp" accept=".json" style="display:none">`
+      + (FS ? '' : '<span>This browser cannot save to a file automatically; download a copy now and then. Chrome and Edge can.</span>');
+    if (FS){
+      $('b-fnew').onclick = fileAct(async () => useFile(await window.showSaveFilePicker(pickOpts), false));
+      $('b-fopen').onclick = fileAct(async () => useFile((await window.showOpenFilePicker(pickOpts))[0], true));
+      if (pending) $('b-frec').onclick = fileAct(async () => { if (await pending.requestPermission({mode:'readwrite'}) === 'granted') await useFile(pending, true); });
+    }
+    $('b-dl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(payload(), null, 1)], {type:'application/json'})); a.download = 'AL-observed.json'; a.click(); };
+    $('b-imp').onclick = () => $('f-imp').click();
+    $('f-imp').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => {
+      try { const n = mergeMarks(JSON.parse(t)); save(); recompute(); $('status').textContent = n + ' observed marks added from the file.'; }
+      catch (err) { $('status').textContent = 'That file is not a progress file from this planner.'; } }); };
+    rows = [];
+    const up = {};
+    for (const x of cands) for (const c of x.open) up[c.p] = (up[c.p] || 0) + 1;
+    $('status').textContent = `${Object.keys(S.done).length} observed marks. Click a program to open its checklist. Level numbers are from the AL program pages as read on ${AL_META.reqRead || 'an earlier date'}; the program page is the authority.`;
+    head([['Program', ''], ['Observed', '', 'num', 'List items you have marked observed, out of the items on the list.'], ['Certificate levels', '', '', 'Your count against the number each certificate level needs, read from the AL program pages. Where a level counts only part of the list, only that part is counted.'], ['Open tonight', '', 'num', 'Targets in this program that are up in your window tonight, earn credit with your setup and are not yet observed.'], ['Rules', '']]);
+    const qq = (S.q || '').toLowerCase().trim(), progsShown = AL_META.programs.filter(p => !qq || p.name.toLowerCase().includes(qq));
+    $('status').textContent += found(progsShown.length, AL_META.programs.length);
+    $('tb').innerHTML = progsShown.map(p => { const s = st[p.id];
+      return `<tr class="r" data-p="${p.id}"><td>${esc(p.name)}</td><td class="num">${s.done} / ${s.total}</td>
+      <td>${s.levels.slice(0, 4).map(l => `<span class="lvl${l.have >= l.need ? ' ok' : ''}" title="${l.listed} listed">${esc(l.name)} ${l.have}/${l.need}<span class="bar"><i style="width:${Math.min(100, 100 * l.have / l.need)}%"></i></span></span>`).join('')}${s.levels.length > 4 ? '<span class="lvl">…</span>' : ''}</td>
+      <td class="num">${S.progs[p.id] === false ? 'not ticked' : progWorks(p.id, S) ? (up[p.id] || 0) : esc(instWhy(p.id, null, S, true))}</td>
+      <td><a href="${p.url}" target="_blank" rel="noopener">AL page</a></td></tr>`; }).join('');
+    $('tb').querySelectorAll('tr.r').forEach(tr => tr.onclick = e => { if (e.target.tagName === 'A') return; S.prog = tr.dataset.p; S.chk = 'all'; save(); render(); });
+  }
+  /* Full checklist of one program: every list item, observed or not, whether or not it is up tonight. */
+  function renderChecklist(pid, st){
+    const p = AL_META.programs.find(p => p.id === pid), s = st[pid], list = [], seen = {};
+    for (const o of AL_OBJECTS) for (const it of o.progs) if (it.p === pid){
+      const k = itemKey(pid, it);
+      if (seen[k]){ if (it.s && !seen[k].subs.includes(it.s)) seen[k].subs.push(it.s); continue; }
+      list.push(seen[k] = {k, o, it, subs:it.s ? [it.s] : []});
+    }
+    const numOf = x => { const m = /(\d+)\s*\w?$/.exec(String(x.it.n ?? '')); return m ? +m[1] : 1e9; };
+    list.sort((a, b) => (a.subs[0] || '').localeCompare(b.subs[0] || '') || numOf(a) - numOf(b) || a.o.ra - b.o.ra);
+    const f = S.chk || 'all', vis = {};
+    const visOf = x => vis[x.k] || (vis[x.k] = {v:visibility(x.o.ra, x.o.dec, S, W)});
+    const label = x => x.it.i && x.it.i !== x.o.name ? x.it.i + ' (' + x.o.name + ')' : x.o.name;
+    const shown = sortBy(list.filter(x => (f === 'all' || (f === 'open') === !S.done[x.k]) && hit(x.o, label(x) + ' ' + x.subs.join(' ') + ' ' + (x.it.n ?? ''))), csort,
+      {no:x => numOf(x) === 1e9 ? '' : numOf(x), name:x => label(x), group:x => x.subs.join(' / '), type:x => x.o.type, con:x => x.o.con, mag:x => x.o.mag, date:x => S.done[x.k] || '', tonight:x => { const v = visOf(x).v; return v ? v.to : ''; }});
+    $('bar').innerHTML = `<button id="b-back">← All programs</button><b style="color:var(--tx)">${esc(p.name)}</b>
+      <select id="chk"><option value="all">all items</option><option value="open">not yet observed</option><option value="done">observed</option></select>
+      ${s.levels.map(l => `<span class="lvl${l.have >= l.need ? ' ok' : ''}">${esc(l.name)} ${l.have}/${l.need}</span>`).join('')} <a href="${p.url}" target="_blank" rel="noopener">AL page</a>`;
+    $('chk').value = f;
+    $('b-back').onclick = () => { S.prog = ''; save(); render(); };
+    $('chk').onchange = e => { S.chk = e.target.value; render(); };
+    const q = p.req && p.req.qv;
+    const quick = q ? ` Quick view: ${q.tools.split('').map(t => ({E:'eyes', B:'binoculars', T:'telescope'}[t])).join(' / ')}; ${q.method === 'M' ? 'found by hand only (no go-to)' : 'by hand or go-to'}; ${q.mode === 'V' ? 'visual only' : q.mode === 'I' ? 'imaging only' : 'visual or imaging'}${q.remote === true ? '; remote telescopes allowed' : q.remote === false ? '; no remote telescopes' : ''}${q.min ? '; recommended minimum ' + q.min : ''}.` : ' This program page has no quick-view grid.';
+    $('status').textContent = (p.req && p.req.note ? p.req.note : '') + quick + ` ${s.done} of ${s.total} listed items observed.` + found(shown.length, list.length);
+    rows = shown.map(x => cands.find(c => c.o === x.o) || {o:x.o, v:visibility(x.o.ra, x.o.dec, S, W), rate:rating(x.o, S), open:[], n:0});
+    head([['Seen', ''], ['No.', 'no'], ['Target', 'name'], ['Group', 'group'], ['Type', 'type'], ['Con', 'con'], ['Mag', 'mag', 'num'], ['Observed on', 'date', '', 'Tick Seen to mark an item observed in this program only. The date is the evening shown at the top of the page.'], ['Tonight', 'tonight', '', 'When the target is above your minimum altitude in your observing window tonight.']], csort);
+    let h = '';
+    shown.forEach((x, i) => { const o = x.o, v = rows[i].v, d = S.done[x.k];
+      const name = label(x);
+      h += `<tr class="r${sel === o ? ' sel' : ''}${d ? ' done' : ''}" data-n="${esc(o.name)}" data-k="${esc(x.k)}"><td><input type="checkbox" data-act="chk"${d ? ' checked' : ''}></td><td>${esc(x.it.n ?? '')}</td><td>${esc(name)}</td>
+        <td>${esc(x.subs.join(' / '))}</td><td>${o.type}</td><td>${o.con}</td><td class="num">${o.mag ?? ''}</td><td>${d ? esc(d) : ''}</td>
+        <td>${v ? fmtT(tAt(W, v.from)) + ' to ' + until({v}) + (v.leaving ? ' <span class="warn">leaving soon</span>' : '') : '<span class="note">not up</span>'}</td></tr>`; });
+    $('tb').innerHTML = h;
+    $('tb').querySelectorAll('tr.r').forEach(tr => tr.onclick = e => {
+      const k = tr.dataset.k;
+      if (e.target.dataset.act === 'chk'){ if (S.done[k]) delete S.done[k]; else S.done[k] = S.date; save(); cands = filterCatalog(S, W); rebuildPlan(); render(); return; }
+      sel = byName[tr.dataset.n]; render();
+    });
+  }
+
+  /* ---- detail panel */
+  function css(v){ return getComputedStyle(document.body).getPropertyValue(v).trim(); }
+  function drawDetail(){
+    const o = sel, D = $('detail');
+    if (!o){ D.innerHTML = '<div class="note">Select a target to see which programs it counts toward.</div>'; return; }
+    const cr = credits(o, S), v = visibility(o.ra, o.dec, S, W), when = atDate(), st = nowState(o, when, S), rate = rating(o, S);
+    const mine = cr.filter(c => c.on && c.ok), allDone = mine.length && mine.every(c => c.done);
+    D.innerHTML = `<h2>${esc(o.name)}</h2><div class="sub">${esc(TYPE_NAME[o.type] || o.type)} in ${o.con}${(o.alt || []).length ? ' · ' + esc(o.alt.slice(0, 4).join(', ')) : ''}</div>
+      <div class="btns"><button class="pri" id="d-done"${mine.length ? '' : ' disabled'}>${allDone ? 'Unmark observed' : 'Mark observed'}</button>${tipI('Marks this target observed in every ticked program it earns credit in with the setup chosen for tonight. To mark a single program, use its checklist on the Progress tab.')}<button id="d-plan">${inPlan(o) ? 'Remove from plan' : 'Add to plan'}</button><button id="d-here">I am here</button></div>
+      <canvas id="c-alt" height="120"></canvas>
+      <div class="kv"><span>Position</span><span>${fmtRA(o.ra)} ${fmtDec(o.dec)}</span>
+        <span>Magnitude</span><span>${o.mag ?? 'not listed'}${o.magSrc ? ' (' + esc(o.magSrc) + ')' : ''}</span>
+        ${o.size ? `<span>Size</span><span>${esc(o.size)}</span>` : ''}
+        <span>Difficulty</span><span class="r-${rate}">${rate === 'No' ? 'Beyond the limit for tonight' : rate === '?' ? 'Unknown (no magnitude)' : rate}</span>
+        <span>At ${fmtT(when)}</span><span>${st.up ? Math.round(st.alt) + '° high in the ' + compass(st.az) + ', ' + (st.setsIn === Infinity ? 'always up' : 'up for ' + fmtDur(st.setsIn)) : st.alt > 0 ? 'below your minimum altitude' : 'below the horizon'}</span>
+        <span>Tonight</span><span>${v ? fmtT(tAt(W, v.from)) + ' to ' + until({v}) + ', peak ' + Math.round(v.maxAlt) + '°' : 'not above ' + S.minAlt + '° in the window'}</span>
+        ${v && v.leaving ? '<span>Season</span><span class="warn">Leaving the evening sky within about three weeks</span>' : ''}</div>
+      <div class="sec"><span>Counts toward${tipI('Every program list this target is on. Open means you can earn it tonight. Otherwise the reason is shown: not ticked, wrong instrument, must be found by hand, or already observed.')}</span></div>
+      ${cr.map(c => { const p = AL_META.programs.find(p => p.id === c.p), it = c.items[0], x = it.x || {};
+        const why = !c.on ? 'not in my programs' : !c.ok ? (c.why || 'no credit tonight') : c.done ? 'observed ' + S.done[c.keys[0]] : 'open';
+        const extra = [it.n ? 'list no. ' + it.n : '', c.items.map(i => i.s).filter(Boolean).join(' / '), x.magtext ? 'mags ' + x.magtext : '', x.sep ? 'sep ' + x.sep : '', x.pa ? 'PA ' + x.pa : '', x.class ? 'class ' + x.class : '', x.pick ? 'pick ' + x.pick + ' in this group' : '', x.note || ''].filter(Boolean).join(' · ');
+        return `<div class="cred${c.on && c.ok && !c.done ? '' : ' no'}"><div class="t"><a href="${p.url}" target="_blank" rel="noopener">${esc(p.name)}</a><span>${why}</span></div>${extra ? `<div class="s">${esc(extra)}</div>` : ''}</div>`; }).join('')}
+      <div class="note">Check each program's page for its rules before logging.</div>`;
+    $('d-done').onclick = () => toggleDone(o);
+    $('d-plan').onclick = () => togglePlan(o);
+    $('d-here').onclick = () => { S.anchor = o.name; S.tab = 'next'; save(); render(); };
+    drawAlt($('c-alt'), o, when);
+  }
+  function drawAlt(cv, o, when){
+    const g = cv.getContext && cv.getContext('2d');
+    if (!g) return;
+    const w = cv.clientWidth || 300, h = +cv.getAttribute('height'), dpr = window.devicePixelRatio || 1;
+    cv.width = w * dpr; cv.height = h * dpr;
+    g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+    const X = t => 28 + t / W.hours * (w - 36), Y = a => h - 16 - Math.max(0, a) / 90 * (h - 24);
+    g.strokeStyle = css('--bd'); g.fillStyle = css('--mu'); g.font = '10px sans-serif'; g.lineWidth = 1;
+    for (const a of [0, 30, 60, 90]){ g.beginPath(); g.moveTo(28, Y(a)); g.lineTo(w - 8, Y(a)); g.stroke(); g.fillText(a + '°', 4, Y(a) + 3); }
+    for (let t = 0; t <= W.hours + 1e-6; t += Math.max(1, Math.round(W.hours / 5))) g.fillText(fmtT(tAt(W, t)), X(t) - 12, h - 3);
+    g.strokeStyle = css('--or'); g.setLineDash([3, 3]); g.beginPath(); g.moveTo(28, Y(S.minAlt)); g.lineTo(w - 8, Y(S.minAlt)); g.stroke(); g.setLineDash([]);
+    g.strokeStyle = css('--ac'); g.lineWidth = 2; g.beginPath();
+    for (let i = 0; i <= 60; i++){ const t = W.hours * i / 60, a = altAz(o.ra, o.dec, S.loc.lat, W.lst0 + t * 15 * SID).alt; if (i) g.lineTo(X(t), Y(a)); else g.moveTo(X(t), Y(a)); }
+    g.stroke();
+    const tn = (when - W.start) / 3600000;
+    if (tn >= 0 && tn <= W.hours){ g.strokeStyle = css('--gr'); g.lineWidth = 1; g.beginPath(); g.moveTo(X(tn), 8); g.lineTo(X(tn), h - 16); g.stroke(); }
+  }
+
+  toInputs();
+  fileInfo();
+  recompute();
+  setInterval(() => { if (S.at === 'now' && S.tab === 'next') render(); }, 60000);
+})();
+</script>
+</body>
+</html>
